@@ -211,16 +211,19 @@ function keygenJS(OpenSSL) {
 		var name = keygen.getAttribute('name');
 		if (!name) throw '<keygen> element has no name';
 
-		var algoSelect = document.createElement('select');
-		algoSelect.setAttribute('title', 'Private key algorithm');
-		algoSelect.setAttribute('class', 'keygen-algorithm');
-		for (var algoName of supportedAlgorithms) {
-			var algoOption = document.createElement('option');
-			algoOption.setAttribute('value', algoName);
-			algoOption.textContent = algoName;
-			algoSelect.appendChild(algoOption);
+		var algoSelect;
+		if (!keygen.hasAttribute('keytype')) {
+			algoSelect = document.createElement('select');
+			algoSelect.setAttribute('title', 'Private key algorithm');
+			algoSelect.setAttribute('class', 'keygen-algorithm');
+			for (var algoName of supportedAlgorithms) {
+				var algoOption = document.createElement('option');
+				algoOption.setAttribute('value', algoName);
+				algoOption.textContent = algoName;
+				algoSelect.appendChild(algoOption);
+			}
+			keygen.appendChild(algoSelect);
 		}
-		keygen.appendChild(algoSelect);
 
 		var optInput = document.createElement('input');
 		optInput.setAttribute('title', 'Space-separated public key generation algorithm options\n(e.g. "rsa_keygen_bits:4096" for a 4096-bit RSA key)');
@@ -249,10 +252,11 @@ function keygenJS(OpenSSL) {
 			e.preventDefault();
 
 			(async function() {
+				var algorithm = keygen.hasAttribute('keytype') ? keygen.getAttribute('keytype') : algoSelect.value;
 				var spkac;
 				status.textContent = 'Generating key pair...';
 				try {
-					spkac = await genSpkac(algoSelect.value, optInput.value);
+					spkac = await genSpkac(algorithm, optInput.value);
 				} catch (e) {
 					console.error('keygen.js key generation error:', e);
 					status.textContent = 'Error!';
