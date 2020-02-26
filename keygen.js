@@ -211,6 +211,10 @@ function keygenJS(OpenSSL) {
 		var name = keygen.getAttribute('name');
 		if (!name) throw '<keygen> element has no name';
 
+		var autofocus = keygen.hasAttribute('autofocus');
+		if (autofocus)
+			keygen.removeAttribute('autofocus');
+
 		var algoSelect;
 		if (!keygen.hasAttribute('keytype')) {
 			algoSelect = document.createElement('select');
@@ -222,6 +226,10 @@ function keygenJS(OpenSSL) {
 				algoOption.textContent = algoName;
 				algoSelect.appendChild(algoOption);
 			}
+			if (autofocus) {
+				algoSelect.setAttribute('autofocus', '');
+				autofocus = false;
+			}
 			keygen.appendChild(algoSelect);
 		}
 
@@ -229,6 +237,10 @@ function keygenJS(OpenSSL) {
 		optInput.setAttribute('title', 'Space-separated public key generation algorithm options\n(e.g. "rsa_keygen_bits:4096" for a 4096-bit RSA key)');
 		optInput.setAttribute('class', 'keygen-pkeyopts');
 		optInput.setAttribute('placeholder', 'optional private key options');
+		if (autofocus) {
+			optInput.setAttribute('autofocus', '');
+			autofocus = false;
+		}
 		keygen.appendChild(optInput);
 
 		var status = document.createElement('span');
