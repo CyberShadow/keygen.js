@@ -219,6 +219,8 @@ function keygenJS(OpenSSL) {
 		if (autofocus)
 			keygen.removeAttribute('autofocus');
 
+		var disabled = keygen.hasAttribute('disabled');
+
 		var algoSelect;
 		if (!keygen.hasAttribute('keytype')) {
 			algoSelect = document.createElement('select');
@@ -234,6 +236,8 @@ function keygenJS(OpenSSL) {
 				algoSelect.setAttribute('autofocus', '');
 				autofocus = false;
 			}
+			if (disabled)
+				algoSelect.setAttribute('disabled', '');
 			keygen.appendChild(algoSelect);
 		}
 
@@ -245,6 +249,8 @@ function keygenJS(OpenSSL) {
 			optInput.setAttribute('autofocus', '');
 			autofocus = false;
 		}
+		if (disabled)
+			optInput.setAttribute('disabled', '');
 		keygen.appendChild(optInput);
 
 		var status = document.createElement('span');
