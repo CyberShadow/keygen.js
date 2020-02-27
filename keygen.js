@@ -261,8 +261,15 @@ function keygenJS(OpenSSL) {
 		resultLink.setAttribute('class', 'keygen-link');
 		keygen.appendChild(resultLink);
 
-		var form = optInput.form;
-		if (!form) throw '<keygen> is not in a <form>';
+		var form;
+		if (keygen.hasAttribute('form')) {
+			form = document.getElementById(keygen.getAttribute('form'));
+			if (!form) throw '<keygen> has invalid form attribute';
+		}
+		else {
+			form = optInput.form;
+			if (!form) throw '<keygen> is not in a <form> and has no form attribute';
+		}
 
 		var spkacInput = document.createElement('input');
 		spkacInput.setAttribute('type', 'hidden');
