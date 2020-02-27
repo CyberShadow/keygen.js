@@ -17,9 +17,23 @@ Usage
     import { OpenSSL } from './openssl.js/dist/browser.openssl.js';
     keygenJS(OpenSSL);
 </script>
+<style>
+    .keygen-algorithm { /* algorithm dropdown (select) */ }
+    .keygen-pkeyopts { /* additional key options (text input) */ }
+    .keygen-status { /* status/progress (span) */ }
+    .keygen-link { /* generated certificate download link (a) */ }
+</style>
 
 <form action="/spkac-endpoint.php" method="post">
-    <keygen keytype="rsa" name="key" id="keygen">
-    <input type="submit">
+    <keygen name="key">
+	<!-- More optional attributes:
+	   - keytype (rsa / rsa-pss / x25519 / x448 / ed25519 / ed448)
+	   - challenge
+	     and standard HTML attributes:
+	   - autofocus
+	   - disabled
+	   - form
+	-->
+	<input type="submit">
 </form>
 ```
