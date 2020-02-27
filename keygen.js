@@ -18,7 +18,7 @@
 
 function isKeygenNativelySupported() {
 	// TODO: iOS - https://github.com/Modernizr/Modernizr/issues/1075
-	var keygen = document.getElementById('keygen');
+	var keygen = document.createElement('keygen');
 	if ('challenge' in keygen)
 		return 'blink';
 
