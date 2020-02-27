@@ -143,11 +143,13 @@ function keygenJS(OpenSSL) {
 		rootDir: '/'
 	});
 
-	async function genSpkac(algorithm, pkeyopts) {
+	async function genSpkac(algorithm, pkeyopts, challenge) {
 		if (algorithm === undefined)
 			algorithm = 'RSA';
 		if (!algorithm.length || algorithm.match(/[\s]/))
 			throw 'Invalid algorithm';
+		if (challenge !== undefined && (!challenge.length || challenge.match(/[\s]/)))
+			throw 'Invalid challenge string'; // https://github.com/DigitalArsenal/openssl.js/issues/3
 		pkeyopts = pkeyopts.split(/[\s]{1,}/g).filter(Boolean);
 
 		await openSSL.runCommand(
@@ -160,7 +162,9 @@ function keygenJS(OpenSSL) {
 		await openSSL.runCommand(
 			"spkac" +
 			" -key /private.pem" +
-			" -out /spkac");
+			" -out /spkac" +
+			(challenge === undefined ? "" : " -challenge " + challenge)
+		);
 		if (!('/spkac' in fs) || !fs['/spkac'].length) throw 'Private key generation failed';
 		var privateKey = fs['/private.pem'];
 
@@ -265,10 +269,14 @@ function keygenJS(OpenSSL) {
 
 			(async function() {
 				var algorithm = keygen.hasAttribute('keytype') ? keygen.getAttribute('keytype') : algoSelect.value;
+				var challenge;
+				if (keygen.hasAttribute('challenge'))
+					challenge = keygen.getAttribute('challenge');
+
 				var spkac;
 				status.textContent = 'Generating key pair...';
 				try {
-					spkac = await genSpkac(algorithm, optInput.value);
+					spkac = await genSpkac(algorithm, optInput.value, challenge);
 				} catch (e) {
 					console.error('keygen.js key generation error:', e);
 					status.textContent = 'Error!';
