@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-/* jshint esversion : 8 */
+/* jshint esversion : 8, laxbreak:true */
 
 function isKeygenNativelySupported() {
 	// TODO: iOS - https://github.com/Modernizr/Modernizr/issues/1075
@@ -35,7 +35,8 @@ function keygenJS(OpenSSL) {
 	if (isKeygenNativelySupported())
 		return;
 
-	const supportedAlgorithms = [ 'RSA', 'RSA-PSS', 'X25519', 'X448', 'ED25519', 'ED448' ];
+	const supportedAlgorithms = [ 'RSA', 'RSA-PSS', 'X25519',
+	                              'X448', 'ED25519', 'ED448' ];
 	function wipe(arr) {
 		for (var i = 0; i < arr.length; i++)
 			arr[i] = 0xFE;
@@ -94,7 +95,8 @@ function keygenJS(OpenSSL) {
 				write : ro ? null : function(arr) {
 					// console.log('write', arr.length, '@', pos, '/', fs[fn].buffer.byteLength);
 					if (fs[fn].buffer.byteLength < pos + arr.length) {
-						var newFile = new Uint8Array(nextPowerOfTwo(pos + arr.length));
+						var newSize = nextPowerOfTwo(pos + arr.length);
+						var newFile = new Uint8Array(newSize);
 						newFile.set(fs[fn]);
 						wipe(new Uint8Array(fs[fn].buffer));
 						fs[fn] = newFile.subarray(0, pos);
@@ -148,8 +150,10 @@ function keygenJS(OpenSSL) {
 			algorithm = 'RSA';
 		if (!algorithm.length || algorithm.match(/[\s]/))
 			throw 'Invalid algorithm';
-		if (challenge !== undefined && (!challenge.length || challenge.match(/[\s]/)))
-			throw 'Invalid challenge string'; // https://github.com/DigitalArsenal/openssl.js/issues/3
+		if (challenge !== undefined && (!challenge.length || challenge.match(/[\s]/))) {
+			// https://github.com/DigitalArsenal/openssl.js/issues/3
+			throw 'Invalid challenge string';
+		}
 		pkeyopts = pkeyopts.split(/[\s]{1,}/g).filter(Boolean);
 
 		await openSSL.runCommand(
@@ -157,7 +161,8 @@ function keygenJS(OpenSSL) {
 			" -algorithm " + algorithm +
 			pkeyopts.map(opt => " -pkeyopt " + opt) +
 			" -out /private.pem");
-		if (!('/private.pem' in fs) || !fs['/private.pem'].length) throw 'Private key generation failed';
+		if (!('/private.pem' in fs) || !fs['/private.pem'].length)
+			throw 'Private key generation failed';
 
 		await openSSL.runCommand(
 			"spkac" +
@@ -165,7 +170,8 @@ function keygenJS(OpenSSL) {
 			" -out /spkac" +
 			(challenge === undefined ? "" : " -challenge " + challenge)
 		);
-		if (!('/spkac' in fs) || !fs['/spkac'].length) throw 'Private key generation failed';
+		if (!('/spkac' in fs) || !fs['/spkac'].length)
+			throw 'Private key generation failed';
 		var privateKey = fs['/private.pem'];
 
 		var spkac = fs['/spkac'];
@@ -182,7 +188,8 @@ function keygenJS(OpenSSL) {
 			" -in /cert.der" +
 			" -outform pem" +
 			" -out /cert.pem");
-		if (!('/cert.pem' in fs) || !fs['/cert.pem'].length) throw 'Certificate conversion failed';
+		if (!('/cert.pem' in fs) || !fs['/cert.pem'].length)
+			throw 'Certificate conversion failed';
 		return fs['/cert.pem'];
 	}
 
@@ -196,7 +203,8 @@ function keygenJS(OpenSSL) {
 			" -inkey /private.pem" +
 			" -out /cert.p12" +
 			" -passout pass:");
-		if (!('/cert.p12' in fs) || !fs['/cert.p12'].length) throw 'Certificate conversion failed';
+		if (!('/cert.p12' in fs) || !fs['/cert.p12'].length)
+			throw 'Certificate conversion failed';
 		return fs['/cert.p12'];
 	}
 
@@ -207,7 +215,8 @@ function keygenJS(OpenSSL) {
 			" -e" +
 			" -in /data.bin" +
 			" -out /data.txt");
-		if (!('/data.txt' in fs)) throw 'Base64 encoding failed';
+		if (!('/data.txt' in fs))
+			throw 'Base64 encoding failed';
 		return fs['/data.txt'];
 	}
 
@@ -245,7 +254,8 @@ function keygenJS(OpenSSL) {
 		}
 
 		var optInput = document.createElement('input');
-		optInput.setAttribute('title', 'Space-separated public key generation algorithm options\n(e.g. "rsa_keygen_bits:4096" for a 4096-bit RSA key)');
+		optInput.setAttribute('title', 'Space-separated public key generation algorithm options\n' +
+		                      '(e.g. "rsa_keygen_bits:4096" for a 4096-bit RSA key)');
 		optInput.setAttribute('class', 'keygen-pkeyopts');
 		optInput.setAttribute('placeholder', 'optional private key options');
 		if (autofocus) {
@@ -284,7 +294,9 @@ function keygenJS(OpenSSL) {
 			e.preventDefault();
 
 			(async function() {
-				var algorithm = keygen.hasAttribute('keytype') ? keygen.getAttribute('keytype') : algoSelect.value;
+				var algorithm = keygen.hasAttribute('keytype')
+					? keygen.getAttribute('keytype')
+					: algoSelect.value;
 				var challenge;
 				if (keygen.hasAttribute('challenge'))
 					challenge = keygen.getAttribute('challenge');
@@ -314,7 +326,7 @@ function keygenJS(OpenSSL) {
 						if (!xhr.response) throw 'No response';
 						var der = new Uint8Array(xhr.response);
 						if (!der.length) throw 'Empty response';
-						
+
 						(async function() {
 							var pem;
 							status.textContent = 'Converting certificate...';
@@ -337,7 +349,8 @@ function keygenJS(OpenSSL) {
 							}
 
 							var b64 = await base64Encode(p12);
-							var url = 'data:application/x-pkcs12;base64,' + String.fromCharCode.apply(null, b64);
+								var url = 'data:application/x-pkcs12;base64,' +
+									String.fromCharCode.apply(null, b64);
 
 							status.textContent = ''; // OK
 							resultLink.setAttribute('href', url);
