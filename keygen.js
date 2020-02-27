@@ -221,6 +221,9 @@ function keygenJS(OpenSSL) {
 
 		var disabled = keygen.hasAttribute('disabled');
 
+		if (keygen.hasAttribute('keyparams')) // Don't do the wrong thing
+			throw 'Sorry, the keyparams <keygen> attribute is not supported';
+
 		var algoSelect;
 		if (!keygen.hasAttribute('keytype')) {
 			algoSelect = document.createElement('select');
