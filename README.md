@@ -29,6 +29,7 @@ Usage
 	<!-- More optional attributes:
 	   - keytype (rsa / rsa-pss / x25519 / x448 / ed25519 / ed448)
 	   - challenge
+	   - -keygenjs-pkeyopts (e.g. "rsa_keygen_bits:4096")
 	     and standard HTML attributes:
 	   - autofocus
 	   - disabled

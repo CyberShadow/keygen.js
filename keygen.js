@@ -285,11 +285,14 @@ function keygenJS(OpenSSL) {
 				var challenge;
 				if (keygen.hasAttribute('challenge'))
 					challenge = keygen.getAttribute('challenge');
+				var pkeyopts = optInput.value;
+				if (keygen.hasAttribute('-keygenjs-pkeyopts'))
+					pkeyopts += ' ' + keygen.getAttribute('-keygenjs-pkeyopts');
 
 				var spkac;
 				status.textContent = 'Generating key pair...';
 				try {
-					spkac = await genSpkac(algorithm, optInput.value, challenge);
+					spkac = await genSpkac(algorithm, pkeyopts, challenge);
 				} catch (e) {
 					console.error('keygen.js key generation error:', e);
 					status.textContent = 'Error!';
