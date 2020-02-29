@@ -304,6 +304,9 @@ function keygenJS(OpenSSL) {
 				if (keygen.hasAttribute('-keygenjs-pkeyopts'))
 					pkeyopts += ' ' + keygen.getAttribute('-keygenjs-pkeyopts');
 
+				resultLink.setAttribute('href', '');
+				resultLink.textContent = '';
+
 				var spkac;
 				status.textContent = 'Generating key pair...';
 				try {
