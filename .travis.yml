@@ -1,0 +1,18 @@
+language: node_js
+
+node_js:
+  - 13
+
+services:
+  - docker
+
+env:
+  - TARGET=browser-2016.01.01-chromium
+  - TARGET=browser-2020.01.01-chromium
+  - TARGET=jshint
+
+before_install:
+  - ( cd test && npm install )
+
+script:
+  - make -C test $TARGET

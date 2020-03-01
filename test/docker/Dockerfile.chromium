@@ -1,0 +1,26 @@
+ARG arch_date
+FROM keygen-js-arch:${arch_date}
+
+RUN pacman -S --noconfirm chromium curl
+
+# Adapted from
+# https://github.com/adamgotterer/docker-chromium-snapshot/blob/e5e382cd0dbff3e3b9f4888c680b0051bfc1fe3b/Dockerfile :
+
+RUN useradd headless --shell /bin/bash --create-home
+
+RUN mkdir /data \
+    && chown -R headless:headless /data
+
+USER headless
+
+HEALTHCHECK CMD curl --fail http://127.0.0.1:9515/status || exit 1
+
+EXPOSE 9515
+CMD [ \
+    "xvfb-run", \
+    "chromedriver", \
+    "--port=9515", \
+    "--verbose", \
+    "--whitelisted-ips", \
+    "--disable-dev-shm-usage" \
+]

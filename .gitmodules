@@ -1,0 +1,3 @@
+[submodule "test/openssl.js"]
+	path = test/openssl.js
+	url = https://github.com/DigitalArsenal/openssl.js.git

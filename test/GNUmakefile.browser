@@ -1,0 +1,81 @@
+# Makefile to test a single browser version
+
+# Variables:
+# ARCH_DATE=2020.01.01
+# BROWSER=chromium
+
+TMP=tmp
+
+# Building
+
+ARCH_TAR_FN=archlinux-bootstrap-$(ARCH_DATE)-x86_64.tar.gz
+ARCH_TAR_URL=https://archive.archlinux.org/iso/$(ARCH_DATE)/$(ARCH_TAR_FN)
+ARCH_TAR_SHA1=`cat docker/$(ARCH_TAR_FN).sha1`
+ARCH_TAR_DIR=$(TMP)/arch-$(ARCH_DATE)
+ARCH_TAR=$(ARCH_TAR_DIR)/$(ARCH_TAR_FN)
+
+$(ARCH_TAR) :
+	mkdir -p $(ARCH_TAR_DIR)
+	curl --fail --output $@.tmp $(ARCH_TAR_URL)
+	printf "%s %s\n" $(ARCH_TAR_SHA1) $@.tmp | sha1sum -c
+	mv $@.tmp $@
+
+DOCKER=docker
+
+DOCKER_FLAG_ARCH=$(TMP)/.docker-image-ok-arch-$(ARCH_DATE)
+
+$(DOCKER_FLAG_ARCH) : docker/Dockerfile.arch $(ARCH_TAR)
+	$(DOCKER) pull keygenjs/arch:$(ARCH_DATE) || \
+	$(DOCKER) build \
+		-t keygenjs/arch:$(ARCH_DATE) \
+		-f - \
+		--build-arg arch_tar="$(ARCH_TAR_FN)" \
+		--build-arg arch_date_url=$(subst .,/,$(ARCH_DATE)) \
+		"$(ARCH_TAR_DIR)" \
+		< $<
+	touch "$@"
+
+DOCKER_FLAG_BROWSER=$(TMP)/.docker-image-ok-browser-$(ARCH_DATE)-$(BROWSER)
+$(DOCKER_FLAG_BROWSER) : docker/Dockerfile.$(BROWSER) $(DOCKER_FLAG_ARCH)
+	$(DOCKER) pull keygenjs/browser:$(ARCH_DATE)-$(BROWSER) || \
+	$(DOCKER) build \
+		--build-arg arch_date=$(ARCH_DATE) \
+		-t keygenjs/browser:$(ARCH_DATE)-$(BROWSER) \
+		- \
+		< $<
+	touch "$@"
+
+# Running
+
+DOCKER_CID_FILE=$(TMP)/.docker-cid-$(ARCH_DATE)-$(BROWSER)
+$(DOCKER_CID_FILE) : $(DOCKER_FLAG_BROWSER)
+	if test -s $@ ; then docker kill $$(cat $@) ; fi
+	rm -f $@
+	$(DOCKER) run \
+		-d \
+		--shm-size=2g \
+		--health-interval=5s \
+		--cidfile="$@" \
+		keygenjs/browser:$(ARCH_DATE)-$(BROWSER)
+	while [ $$(docker inspect -f {{.State.Health.Status}} $$(cat $@)) != healthy ] ; do sleep 0.1 ; done
+
+TMP_BROWSER_ROOT=$(TMP)/browser-$(ARCH_DATE)-$(BROWSER)-root
+
+.DEFAULT_GOAL :=
+FLAG_TEST=$(TMP)/.ok-$(ARCH_DATE)-$(BROWSER)
+test : $(FLAG_TEST)
+$(FLAG_TEST) : test.js $(DOCKER_CID_FILE)
+	rm -rf $(TMP_BROWSER_ROOT)
+	mkdir $(TMP_BROWSER_ROOT)
+	node --unhandled-rejections=strict $< \
+		$(BROWSER) \
+		$$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $$(cat $(DOCKER_CID_FILE))) \
+		$$(docker network inspect bridge -f '{{range .IPAM.Config}}{{.Gateway}}{{end}}') \
+		$(TMP_BROWSER_ROOT)
+	touch "$@"
+
+
+# For Emacs:
+# Local Variables:
+# mode: makefile
+# End:

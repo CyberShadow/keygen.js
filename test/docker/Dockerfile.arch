@@ -1,0 +1,26 @@
+FROM scratch AS rootfs
+
+ARG arch_tar
+ADD ${arch_tar} /
+
+
+FROM scratch
+
+COPY --from=rootfs /root.x86_64/ /
+
+# Can't use signature verification due to expired keys.
+# RUN pacman-key --init
+# RUN pacman-key --populate
+
+# Disable signature verification instead.
+# It should be possible to re-enable it once Linux 5.6 time
+# namespaces become mainstream, and Docker gets an option to set it.
+RUN perl -i -p -e 's/SigLevel.*/SigLevel = Never/' /etc/pacman.conf
+
+ARG arch_date_url
+# optional local caching proxy
+RUN echo 'Server=http://172.17.0.1:18007/archive.archlinux.org/repos/'"${arch_date_url}"'/$repo/os/$arch' > /etc/pacman.d/mirrorlist
+RUN yes 'Server=https://archive.archlinux.org/repos/'"${arch_date_url}"'/$repo/os/$arch' | head -n 5 >> /etc/pacman.d/mirrorlist
+
+RUN pacman -Syyuu --noconfirm
+RUN pacman -S --noconfirm --needed xorg-server-xvfb awk which
