@@ -9,6 +9,7 @@ services:
 env:
   - TARGET=browser-2016.01.01-chromium
   - TARGET=browser-2020.01.01-chromium
+  - TARGET=browser-2020.01.01-firefox
   - TARGET=jshint
 
 before_install:

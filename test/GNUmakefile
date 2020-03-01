@@ -3,6 +3,7 @@ TMP=tmp
 BROWSERS= \
 	2016.01.01-chromium \
 	2020.01.01-chromium \
+	2020.01.01-firefox \
 
 all : jshint \
 	$(addprefix browser-, $(BROWSERS))

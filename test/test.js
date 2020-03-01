@@ -123,7 +123,11 @@ const seleniumBrowser = ({
 		capabilities : webdriver.Capabilities.chrome()
 			.set('chromeOptions', chromeOptions)
 			.set('goog:chromeOptions', chromeOptions)
-	}
+	},
+	'firefox' : {
+		browser : 'firefox',
+		capabilities : webdriver.Capabilities.firefox(),
+	},
 })[browser];
 
 var driver;
