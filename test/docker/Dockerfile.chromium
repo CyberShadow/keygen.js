@@ -1,5 +1,5 @@
 ARG arch_date
-FROM keygen-js-arch:${arch_date}
+FROM keygenjs/arch:${arch_date}
 
 RUN pacman -S --noconfirm chromium curl
 
