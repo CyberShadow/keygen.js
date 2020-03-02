@@ -50,102 +50,108 @@ function keygenJS(OpenSSL) {
 		return p;
 	}
 
-	// openssl.js suggests using wasmfs, however, it adds a
-	// lot of dependencies and is difficult to package, so
-	// just implement a basic virtual FS here.
-	let fs = { }; // TODO: should have temp scope
-	let lineBuf = '';
-	let tty = {
-		write : function(arr) {
-			for (var c of arr)
-				if (c == 10) {
-					console.log(lineBuf); lineBuf = '';
-				} else {
-					lineBuf += String.fromCharCode(c);
-				}
-		}
-	};
-	let fds = [ { }, tty, tty ];
-	let fsImpl = {
-		existsSync : function(fn) {
-			// console.log('existsSync', fn);
-			return fs.hasOwnProperty(fn);
-		},
-		realpathSync : function(n) {
-			return n;
-		},
-		mkdirSync : function() {
-			return false;
-		},
-		openSync : function(fn, flags) {
-			// console.log('openSync', fn, flags);
-			var ro = flags & 1;
-			if (!ro)
-				fs[fn] = new Uint8Array(0);
-			else
-				if (!fs.hasOwnProperty(fn))
-					return -1;
-			var pos = 0;
-			fds.push({
-				read : function(length) {
-					var arr = fs[fn].subarray(pos, pos + length);
-					pos += arr.length;
-					return arr;
-				},
-				write : ro ? null : function(arr) {
-					// console.log('write', arr.length, '@', pos, '/', fs[fn].buffer.byteLength);
-					if (fs[fn].buffer.byteLength < pos + arr.length) {
-						var newSize = nextPowerOfTwo(pos + arr.length);
-						var newFile = new Uint8Array(newSize);
-						newFile.set(fs[fn]);
-						wipe(new Uint8Array(fs[fn].buffer));
-						fs[fn] = newFile.subarray(0, pos);
-					}
-					var target = new Uint8Array(fs[fn].buffer, pos, arr.length);
-					target.set(arr);
-					pos += arr.length;
-					fs[fn] = new Uint8Array(fs[fn].buffer, 0, pos);
-					wipe(arr);
-				},
-			});
-			return fds.length - 1;
-		},
-		readSync : function(fd, buffer, offset, length, position) {
-			// console.log(fd, buffer, offset, length);
-			if (fd < 0) return 0;
-			var arr = fds[fd].read(length);
-			buffer.subarray(offset, offset + arr.length).set(arr);
-			return arr.length;
-		},
-		writeSync : function(fd, buffer) {
-			if (fd < 0) return 0;
-			fds[fd].write(buffer);
-			return buffer.length;
-		},
-		closeSync : function(fd) {
-			if (fd < 0) return;
-			fds[fd] = null;
-		},
-		fstatSync : function() {
-			return {
-				isBlockDevice : () => false,
-				isCharacterDevice : () => false,
-				isDirectory : () => false,
-				isFIFO : () => false,
-				isFile : () => true,
-			};
-		},
-		constants : {
-			O_RDONLY : 1,
-		},
-	};
+	function newSession() {
+		// openssl.js suggests using wasmfs, however, it adds a
+		// lot of dependencies and is difficult to package, so
+		// just implement a basic virtual FS here.
 
-	let openSSL = new OpenSSL({
-		fs: fsImpl,
-		rootDir: '/'
-	});
+		let files = { };
+		let lineBuf = '';
+		let tty = {
+			write : function(arr) {
+				for (var c of arr)
+					if (c == 10) {
+						console.log(lineBuf); lineBuf = '';
+					} else {
+						lineBuf += String.fromCharCode(c);
+					}
+			}
+		};
+		let fds = [ { }, tty, tty ];
+		let impl = {
+			existsSync : function(fn) {
+				// console.log('existsSync', fn);
+				return files.hasOwnProperty(fn);
+			},
+			realpathSync : function(n) {
+				return n;
+			},
+			mkdirSync : function() {
+				return false;
+			},
+			openSync : function(fn, flags) {
+				// console.log('openSync', fn, flags);
+				var ro = flags & 1;
+				if (!ro)
+					files[fn] = new Uint8Array(0);
+				else
+					if (!files.hasOwnProperty(fn))
+						return -1;
+				var pos = 0;
+				fds.push({
+					read : function(length) {
+						var arr = files[fn].subarray(pos, pos + length);
+						pos += arr.length;
+						return arr;
+					},
+					write : ro ? null : function(arr) {
+						// console.log('write', arr.length, '@', pos, '/', files[fn].buffer.byteLength);
+						if (files[fn].buffer.byteLength < pos + arr.length) {
+							var newSize = nextPowerOfTwo(pos + arr.length);
+							var newFile = new Uint8Array(newSize);
+							newFile.set(files[fn]);
+							wipe(new Uint8Array(files[fn].buffer));
+							files[fn] = newFile.subarray(0, pos);
+						}
+						var target = new Uint8Array(files[fn].buffer, pos, arr.length);
+						target.set(arr);
+						pos += arr.length;
+						files[fn] = new Uint8Array(files[fn].buffer, 0, pos);
+						wipe(arr);
+					},
+				});
+				return fds.length - 1;
+			},
+			readSync : function(fd, buffer, offset, length, position) {
+				// console.log(fd, buffer, offset, length);
+				if (fd < 0) return 0;
+				var arr = fds[fd].read(length);
+				buffer.subarray(offset, offset + arr.length).set(arr);
+				return arr.length;
+			},
+			writeSync : function(fd, buffer) {
+				if (fd < 0) return 0;
+				fds[fd].write(buffer);
+				return buffer.length;
+			},
+			closeSync : function(fd) {
+				if (fd < 0) return;
+				fds[fd] = null;
+			},
+			fstatSync : function() {
+				return {
+					isBlockDevice : () => false,
+					isCharacterDevice : () => false,
+					isDirectory : () => false,
+					isFIFO : () => false,
+					isFile : () => true,
+				};
+			},
+			constants : {
+				O_RDONLY : 1,
+			},
+		};
+
+		let openSSL = new OpenSSL({
+			fs: impl,
+			rootDir: '/'
+		});
+
+		return { files, openSSL };
+	}
 
 	async function genSpkac(algorithm, pkeyopts, challenge) {
+		let s = newSession();
 		if (algorithm === undefined)
 			algorithm = 'RSA';
 		if (!algorithm.length || algorithm.match(/[\s]/))
@@ -156,68 +162,71 @@ function keygenJS(OpenSSL) {
 		}
 		pkeyopts = pkeyopts.split(/[\s]{1,}/g).filter(Boolean);
 
-		await openSSL.runCommand(
+		await s.openSSL.runCommand(
 			"genpkey" +
 			" -algorithm " + algorithm +
 			pkeyopts.map(opt => " -pkeyopt " + opt) +
 			" -out /private.pem");
-		if (!fs.hasOwnProperty('/private.pem') || !fs['/private.pem'].length)
+		if (!s.files.hasOwnProperty('/private.pem') || !s.files['/private.pem'].length)
 			throw 'Private key generation failed';
 
-		await openSSL.runCommand(
+		await s.openSSL.runCommand(
 			"spkac" +
 			" -key /private.pem" +
 			" -out /spkac" +
 			(challenge === undefined ? "" : " -challenge " + challenge)
 		);
-		if (!fs.hasOwnProperty('/spkac') || !fs['/spkac'].length)
+		if (!s.files.hasOwnProperty('/spkac') || !s.files['/spkac'].length)
 			throw 'Private key generation failed';
-		var privateKey = fs['/private.pem'];
+		var privateKey = s.files['/private.pem'];
 
-		var spkac = fs['/spkac'];
+		var spkac = s.files['/spkac'];
 		spkac = spkac.subarray(6); // Skip "SKPAC="
 		spkac = String.fromCharCode.apply(null, spkac);
 		return { spkac, privateKey };
 	}
 
 	async function convertDerToPem(der) {
-		fs['/cert.der'] = der;
-		await openSSL.runCommand(
+		let s = newSession();
+		s.files['/cert.der'] = der;
+		await s.openSSL.runCommand(
 			"x509" +
 			" -inform der" +
 			" -in /cert.der" +
 			" -outform pem" +
 			" -out /cert.pem");
-		if (!fs.hasOwnProperty('/cert.pem') || !fs['/cert.pem'].length)
+		if (!s.files.hasOwnProperty('/cert.pem') || !s.files['/cert.pem'].length)
 			throw 'Certificate conversion failed';
-		return fs['/cert.pem'];
+		return s.files['/cert.pem'];
 	}
 
 	async function convertToPkcs12(key, pem) {
-		fs['/private.pem'] = key;
-		fs['/cert.pem'] = pem;
-		await openSSL.runCommand(
+		let s = newSession();
+		s.files['/private.pem'] = key;
+		s.files['/cert.pem'] = pem;
+		await s.openSSL.runCommand(
 			"pkcs12" +
 			" -export" +
 			" -in /cert.pem" +
 			" -inkey /private.pem" +
 			" -out /cert.p12" +
 			" -passout pass:");
-		if (!fs.hasOwnProperty('/cert.p12') || !fs['/cert.p12'].length)
+		if (!s.files.hasOwnProperty('/cert.p12') || !s.files['/cert.p12'].length)
 			throw 'Certificate conversion failed';
-		return fs['/cert.p12'];
+		return s.files['/cert.p12'];
 	}
 
 	async function base64Encode(data) {
-		fs['/data.bin'] = data;
-		await openSSL.runCommand(
+		let s = newSession();
+		s.files['/data.bin'] = data;
+		await s.openSSL.runCommand(
 			"base64" +
 			" -e" +
 			" -in /data.bin" +
 			" -out /data.txt");
-		if (!fs.hasOwnProperty('/data.txt'))
+		if (!s.files.hasOwnProperty('/data.txt'))
 			throw 'Base64 encoding failed';
-		return fs['/data.txt'];
+		return s.files['/data.txt'];
 	}
 
 	function polyfillKeygen(keygen) {
