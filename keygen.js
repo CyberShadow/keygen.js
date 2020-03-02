@@ -181,7 +181,7 @@ function keygenJS(OpenSSL) {
 		var privateKey = s.files['/private.pem'];
 
 		var spkac = s.files['/spkac'];
-		spkac = spkac.subarray(6); // Skip "SKPAC="
+		spkac = spkac.subarray(6, spkac.length - 1); // Skip "SKPAC=" and trim line ending
 		spkac = String.fromCharCode.apply(null, spkac);
 		return { spkac, privateKey };
 	}
