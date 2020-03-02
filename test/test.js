@@ -46,7 +46,7 @@ const spkacServer = (function() {
 
 const server = http
       .createServer(function(req, res) {
-        console.log(req.url);
+        console.log(req.method, req.url);
         const u = url.parse(req.url);
         if (u.pathname == '/keygen') {
           res.writeHead(200, {'Content-Type': 'text/html'});
