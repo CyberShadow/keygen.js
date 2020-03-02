@@ -297,6 +297,8 @@ function keygenJS(OpenSSL) {
 		spkacInput.setAttribute('type', 'hidden');
 		keygen.removeAttribute('name');
 		spkacInput.setAttribute('name', name);
+		if (disabled)
+			spkacInput.setAttribute('disabled', '');
 		form.appendChild(spkacInput);
 
 		form.addEventListener('submit', function(e) {
