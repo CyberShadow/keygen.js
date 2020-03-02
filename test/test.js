@@ -93,6 +93,9 @@ const path = require('path');
 const fs = require('fs');
 
 async function checkSpkac(key) {
+  if (key.length == 0 || key[key.length - 1] == 10)
+    throw new Error('Invalid SPKAC');
+
   let openSSL = new openssl.OpenSSL({ fs });
   let keyPath = fs.realpathSync(tmpDir) + '/key.pem';
   fs.writeFileSync(keyPath, 'SPKAC=' + key);
