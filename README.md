@@ -1,7 +1,7 @@
-keygen.js
-=========
+keygen.js ![](https://travis-ci.org/CyberShadow/keygen.js.svg?branch=master)
+============================================================================
 
-This is a (very basic) JavaScript polyfill for the `<keygen>` tag, which is being removed from modern browsers.
+This project attempts to implement a JavaScript polyfill for the `<keygen>` tag, which is being removed from modern browsers.
 
 [openssl.js](https://github.com/DigitalArsenal/openssl.js) is used for the heavy lifting.
 
@@ -24,6 +24,7 @@ Usage
     .keygen-link { /* generated certificate download link (a) */ }
 </style>
 
+<!-- keygen.js assumes the form target returns a certificate: -->
 <form action="/spkac-endpoint.php" method="post">
     <keygen name="key">
 	<!-- More optional attributes:
