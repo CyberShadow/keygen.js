@@ -134,10 +134,10 @@ var driver;
 
 async function runTests(tests) {
   driver = await new webdriver.Builder()
-      .usingServer(`http://${serverIP}:9515`)
-      .forBrowser(seleniumBrowser.browser)
-      .withCapabilities(seleniumBrowser.capabilities)
-      .build();
+    .usingServer(`http://${serverIP}:9515`)
+    .forBrowser(seleniumBrowser.browser)
+    .withCapabilities(seleniumBrowser.capabilities)
+    .build();
   try {
     var capabilities = await driver.getCapabilities();
     console.log('Testing with:', capabilities.getBrowserName(), capabilities.getBrowserVersion());
