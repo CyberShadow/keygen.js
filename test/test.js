@@ -154,12 +154,25 @@ async function runTests(tests) {
 
 // The tests
 
+const assert = require('assert');
+
 runTests([
   async function basic() {
-    await driver.get(`http://${localIP}:${httpPort}/keygen`);
+    await driver.get(serverBase + `keygen`);
 
     await driver.findElement(webdriver.By.css('input[type=submit]')).click();
     var key = await spkacServer.receiveKey();
     checkSpkac(key);
+  },
+
+  async function challenge() {
+    await driver.get(serverBase + `keygen?challenge=fite-me`);
+
+    // console.log(await driver.executeScript('return typeof isKeygenNativelySupported === "undefined" ? "undefined" : isKeygenNativelySupported()'));
+
+    await driver.findElement(webdriver.By.css('input[type=submit]')).click();
+    var key = await spkacServer.receiveKey();
+    var spkac = await checkSpkac(key);
+    assert.match(spkac.toString(), /^  Challenge String: fite-me$/m);
   },
 ]);
