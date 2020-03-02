@@ -69,7 +69,7 @@ function keygenJS(OpenSSL) {
 	let fsImpl = {
 		existsSync : function(fn) {
 			// console.log('existsSync', fn);
-			return fn in fs;
+			return fs.hasOwnProperty(fn);
 		},
 		realpathSync : function(n) {
 			return n;
@@ -83,7 +83,7 @@ function keygenJS(OpenSSL) {
 			if (!ro)
 				fs[fn] = new Uint8Array(0);
 			else
-				if (!(fn in fs))
+				if (!fs.hasOwnProperty(fn))
 					return -1;
 			var pos = 0;
 			fds.push({
@@ -161,7 +161,7 @@ function keygenJS(OpenSSL) {
 			" -algorithm " + algorithm +
 			pkeyopts.map(opt => " -pkeyopt " + opt) +
 			" -out /private.pem");
-		if (!('/private.pem' in fs) || !fs['/private.pem'].length)
+		if (!fs.hasOwnProperty('/private.pem') || !fs['/private.pem'].length)
 			throw 'Private key generation failed';
 
 		await openSSL.runCommand(
@@ -170,7 +170,7 @@ function keygenJS(OpenSSL) {
 			" -out /spkac" +
 			(challenge === undefined ? "" : " -challenge " + challenge)
 		);
-		if (!('/spkac' in fs) || !fs['/spkac'].length)
+		if (!fs.hasOwnProperty('/spkac') || !fs['/spkac'].length)
 			throw 'Private key generation failed';
 		var privateKey = fs['/private.pem'];
 
@@ -188,7 +188,7 @@ function keygenJS(OpenSSL) {
 			" -in /cert.der" +
 			" -outform pem" +
 			" -out /cert.pem");
-		if (!('/cert.pem' in fs) || !fs['/cert.pem'].length)
+		if (!fs.hasOwnProperty('/cert.pem') || !fs['/cert.pem'].length)
 			throw 'Certificate conversion failed';
 		return fs['/cert.pem'];
 	}
@@ -203,7 +203,7 @@ function keygenJS(OpenSSL) {
 			" -inkey /private.pem" +
 			" -out /cert.p12" +
 			" -passout pass:");
-		if (!('/cert.p12' in fs) || !fs['/cert.p12'].length)
+		if (!fs.hasOwnProperty('/cert.p12') || !fs['/cert.p12'].length)
 			throw 'Certificate conversion failed';
 		return fs['/cert.p12'];
 	}
@@ -215,7 +215,7 @@ function keygenJS(OpenSSL) {
 			" -e" +
 			" -in /data.bin" +
 			" -out /data.txt");
-		if (!('/data.txt' in fs))
+		if (!fs.hasOwnProperty('/data.txt'))
 			throw 'Base64 encoding failed';
 		return fs['/data.txt'];
 	}
