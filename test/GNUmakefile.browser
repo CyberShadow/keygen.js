@@ -64,7 +64,7 @@ TMP_BROWSER_ROOT=$(TMP)/browser-$(ARCH_DATE)-$(BROWSER)-root
 .DEFAULT_GOAL :=
 FLAG_TEST=$(TMP)/.ok-$(ARCH_DATE)-$(BROWSER)
 test : $(FLAG_TEST)
-$(FLAG_TEST) : test.js $(DOCKER_CID_FILE)
+$(FLAG_TEST) : test.js ../keygen.js $(DOCKER_CID_FILE)
 	rm -rf $(TMP_BROWSER_ROOT)
 	mkdir $(TMP_BROWSER_ROOT)
 	node --unhandled-rejections=strict $< \
