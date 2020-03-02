@@ -175,4 +175,12 @@ runTests([
     var spkac = await checkSpkac(key);
     assert.match(spkac.toString(), /^  Challenge String: fite-me$/m);
   },
+
+  async function disabled() {
+    await driver.get(serverBase + `keygen?disabled=`);
+
+    await driver.findElement(webdriver.By.css('input[type=submit]')).click();
+    var key = await spkacServer.receiveKey();
+    assert.strictEqual(key, undefined);
+  },
 ]);
