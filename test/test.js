@@ -44,19 +44,18 @@ const spkacServer = (function() {
   return { handleKey, receiveKey };
 })();
 
+const serverBase = `http://${localIP}:${httpPort}/`;
 const server = http
       .createServer(function(req, res) {
         console.log(req.method, req.url);
-        const u = url.parse(req.url);
+        const u = new url.URL(req.url, serverBase);
         if (u.pathname == '/keygen') {
           res.writeHead(200, {'Content-Type': 'text/html'});
           var options = '';
 
-          if (u.searchParams) {
-            u.searchParams.forEach(function(value, key) {
-              options += ` ${key}="${value}"`;
-            });
-          }
+          u.searchParams.forEach(function(value, key) {
+            options += ` ${key}="${value}"`;
+          });
 
           res.end(`
 <!doctype html>
