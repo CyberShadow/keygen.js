@@ -363,8 +363,8 @@ function keygenJS(OpenSSL) {
 							}
 
 							var b64 = await base64Encode(p12);
-								var url = 'data:application/x-pkcs12;base64,' +
-									String.fromCharCode.apply(null, b64);
+							var url = 'data:application/x-pkcs12;base64,' +
+								String.fromCharCode.apply(null, b64);
 
 							status.textContent = ''; // OK
 							resultLink.setAttribute('href', url);
