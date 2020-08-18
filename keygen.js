@@ -210,7 +210,7 @@ function keygenJS(OpenSSL) {
 			" -in /cert.pem" +
 			" -inkey /private.pem" +
 			" -out /cert.p12" +
-			" -passout pass:");
+			" -passout pass:password");
 		if (!s.files.hasOwnProperty('/cert.p12') || !s.files['/cert.p12'].length)
 			throw 'Certificate conversion failed';
 		return s.files['/cert.p12'];
@@ -369,7 +369,7 @@ function keygenJS(OpenSSL) {
 							status.textContent = ''; // OK
 							resultLink.setAttribute('href', url);
 							resultLink.setAttribute('download', 'cert.p12');
-							resultLink.textContent = 'Save certificate';
+							resultLink.textContent = 'Save certificate (import password is "password")';
 						})();
 					} catch (e) {
 						console.error('keygen.js certificate generation error:', e);
