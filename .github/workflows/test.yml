@@ -1,0 +1,25 @@
+name: test
+on: [ push, pull_request ]
+jobs:
+  test:
+    runs-on: ubuntu-20.04
+    strategy:
+      matrix:
+        target:
+        - browser-2016.01.01-chromium
+        - browser-2020.01.01-chromium
+        - browser-2018.01.01-firefox
+        - browser-2020.01.01-firefox
+        - jshint
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: recursive
+    - name: Setup Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: 13
+    - name: Setup npm dependencies
+      run: ( cd test && npm install )
+    - name: Test
+      run: make -C test ${{ matrix.target }}
